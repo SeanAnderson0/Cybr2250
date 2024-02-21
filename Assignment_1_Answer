@@ -39,9 +39,15 @@ get:    ldr     r0, =file_handle        @ Read the next line of input
     subs    r0, r0, #1              @ A word like "radar" will have R0=6
     beq     end_of_file             @ because of the null character.
 
-    @ ========================================
-    @ Palindrome checking implementation
-    @
+@ ========================================
+@ Palindrome checking implementation
+@
+@ r1 - Pointer to the beginning of the string
+@ r2 - Pointer to the end of the string
+@ r3 - Temporary register for character comparison
+@ r4 - Temporary register for character comparison
+@
+@ ========================================
     ldr     r1, =line                @ Pointer to the beginning of the string
     ldr     r2, =line                @ Pointer to the end of the string
     add     r2, r2, r0               @ Move end pointer to the end of the string
@@ -51,13 +57,16 @@ get:    ldr     r0, =file_handle        @ Read the next line of input
         ldrb    r3, [r1], #1            @ Load byte from the beginning, increment pointer
         ldrb    r4, [r2], #-1           @ Load byte from the end, decrement pointer
         cmp     r3, r4                  @ Compare characters
+        beq     continue_checking       @ If they match, continue checking
         bne     not_palindrome          @ If they don't match, not a palindrome
+    continue_checking:
         b       palindrome_loop         @ Continue checking
     palindrome_found:
         b       good                    @ Branch to label for palindrome
     not_palindrome:
         b       bad                     @ Branch to label for not palindrome
-    @ ========================================
+@ ========================================
+
 
 good:   mov     r0, #1                  @ Print that it is
     ldr     r1, =it_is
