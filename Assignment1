@@ -1,88 +1,105 @@
-@ ============================================================
-@
-@ Palindrome problem for ARM - starter code.
-@
-@ Author: Bill Mahoney
-@ For:    CYBR 2250
-@
-@ ============================================================
+#include <stdio.h>
+#include <math.h>
 
-        @ These are the SWI instructions for the "Embest" plugin.
-	
-        .equ SWI_WriteC,        0x00    @ Write to stdout
-        .equ SWI_Exit,          0x11    @ Exit gracefully
-        .equ SWI_Open,          0x66    @ Open file
-        .equ SWI_Close,         0x68    @ Close file
-        .equ SWI_ReadS,         0x6a    @ Read string from file
-        .equ SWI_WriteS,        0x69    @ Write string to stdout
-        .equ SWI_RdInt,         0x6c    @ Read an integer from a file
-        .equ SWI_PrInt,         0x6b    @ Write an integer to a file
-        .equ SWI_Disp,          0x204   @ Display a string on the LCD screen
-        .equ SWI_Check_button,  0x202   @ Check if button is pressed
+// Function declarations
+int is_prime(int n);
+int is_triangular(int n);
+int is_square(int n);
+int is_hexagonal(int n);
+int is_perfect(int n);
 
-        .equ LINE_SIZE,         100     @ Each line of input < 100 bytes
-        
-        .text                       
-        .global _start             
-_start:                           
-        ldr     r0, =in_file_name       @ Open up the file
-        mov     r1, #0                  @ Read only
-        swi     SWI_Open		@ Open the file
-        bcs     file_not_found		@ Branch on carry set (it didn't work)
-        ldr     r1, =file_handle        @ Save the file handle for later
-        str     r0, [r1]
+/* ===============================================================
+   is_prime
+   Checks whether a number is prime.
+   Inputs: The number to check
+   Outputs: None
+   Returns: 1 if prime, 0 otherwise
+   Author: Sean Anderson
+   =============================================================== */
+int is_prime(int n) {
+    if (n <= 1)
+        return 0;
+    if (n <= 3)
+        return 1;
+    if (n % 2 == 0 || n % 3 == 0)
+        return 0;
+    for (int i = 5; i * i <= n; i += 6) {
+        if (n % i == 0 || n % (i + 2) == 0)
+            return 0;
+    }
+    return 1;
+}
 
-get:	ldr     r0, =file_handle        @ Read the next line of input
-        ldr     r0, [r0]
-        ldr     r1, =line
-        mov     r2, #LINE_SIZE
-        swi     SWI_ReadS               @ I SWI_ReadS gives the number of
-        bcs     end_of_file             @ bytes read, it is in R0.
-        subs    r0, r0, #1              @ A word like "radar" will have R0=6
-        beq     end_of_file             @ because of the null character.
-        
-        @ ========================================
-        @ Here is where you put YOUR part of the assignment.
-        @
-        @ If the string passes the test, branch to "good", and if it
-        @ does not, branch to "bad".
-        @
-        @ ========================================
+/* ===============================================================
+   is_triangular
+   Checks whether a number is triangular.
+   Inputs: The number to check
+   Outputs: None
+   Returns: 1 if triangular, 0 otherwise
+   Author: Sean Anderson
+   =============================================================== */
+int is_triangular(int n) {
+    int root = sqrt(2 * n);
+    return root * (root + 1) == 2 * n;
+}
 
-good:   mov     r0, #1                  @ Print that it is
-        ldr     r1, =it_is
-        swi     SWI_WriteS
-        b       get
+/* ===============================================================
+   is_square
+   Checks whether a number is square.
+   Inputs: The number to check
+   Outputs: None
+   Returns: 1 if square, 0 otherwise
+   Author: Sean Anderson
+   =============================================================== */
+int is_square(int n) {
+    int root = sqrt(n);
+    return root * root == n;
+}
 
-bad:    mov     r0, #1                  @ Print that it is
-        ldr     r1, =it_is_not
-        swi     SWI_WriteS
-        b       get
+/* ===============================================================
+   is_hexagonal
+   Checks whether a number is hexagonal.
+   Inputs: The number to check
+   Outputs: None
+   Returns: 1 if hexagonal, 0 otherwise
+   Author: Sean Anderson
+   =============================================================== */
+int is_hexagonal(int n) {
+    double x = (sqrt(8 * n + 1) + 1) / 4;
+    return floor(x) == x;
+}
 
-end_of_file:
-        ldr     r0, =file_handle
-        ldr     r0, [r0]
-        swi     SWI_Close
-        swi     SWI_Exit
+/* ===============================================================
+   is_perfect
+   Checks whether a number is perfect.
+   Inputs: The number to check
+   Outputs: None
+   Returns: 1 if perfect, 0 otherwise
+   Author: Sean Anderson
+   =============================================================== */
+int is_perfect(int n) {
+    return n == 6 || n == 28 || n == 496 || n == 8128 || n == 33550336;
+}
 
-file_not_found:                     
-        mov     r0, #1                  @ Stdout
-        ldr     r1, =in_file_error                                  
-        swi     SWI_WriteS
-        swi     SWI_Exit
+// Opens file
+int main() {
+    FILE *file = fopen("numbers.txt", "r");
+    if (file == NULL) {
+        printf("Error opening file");
+        return 1;
+    }
 
-@ ============================================================
-@ 
-@ Data
-@ 
-@ ============================================================
+    int num;
+    while (fscanf(file, "%d", &num) == 1 && num >= 0) {
+        printf("About the number %d\n", num);
+        printf("%s\n", is_prime(num) ? "This number is prime" : "This number is not prime");
+        printf("%s\n", is_triangular(num) ? "This number is triangular" : "This number is not triangular");
+        printf("%s\n", is_square(num) ? "This number is square" : "This number is not square");
+        printf("%s\n", is_hexagonal(num) ? "This number is hexagonal" : "This number is not hexagonal");
+        printf("%s\n", is_perfect(num) ? "This number is perfect" : "This number is not perfect");
+        printf("\n");
+    }
 
-                .data
-file_handle:    .word   0x00
-in_file_name:   .asciz  "pal.txt"
-in_file_error:  .asciz  "Can't open the file. Shoot...\n"
-it_is_not:      .asciz  "This was not a palindrome.\n"
-it_is:          .asciz  "YES! This one IS a palindrome!\n"
-newline:        .asciz  "\n"
-
-line:           .skip   40      @ The line will be read into here
+    fclose(file);
+    return 0;
+}
